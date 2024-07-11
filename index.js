@@ -37,7 +37,8 @@ async function handleInput() {
     const decodedJson = await decodeJzb(jzbInput);
     outputDiv.textContent = JSON.stringify(decodedJson, null, 2);
   } catch (err) {
-    outputDiv.textContent = `Error: ${err.message}`;
+    console.debug(`Error: ${err.message}`);
+    outputDiv.textContent = "Please enter a valid JZB string.";
   }
 }
 
