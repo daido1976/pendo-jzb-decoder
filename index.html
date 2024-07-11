@@ -31,51 +31,7 @@
     <h1>JZB Decoder</h1>
     <label for="jzbInput">Enter JZB String:</label>
     <textarea id="jzbInput"></textarea>
-    <button onclick="decodeJzbString()">Decode</button>
     <div id="output"></div>
-    <script>
-      function decodeBase64Url(input) {
-        input = input.replace(/-/g, "+").replace(/_/g, "/");
-        return atob(input);
-      }
-
-      async function decompress(data) {
-        const cs = new DecompressionStream("deflate");
-        const writer = cs.writable.getWriter();
-        writer.write(data);
-        writer.close();
-
-        const reader = cs.readable.getReader();
-        const chunks = [];
-        let done, value;
-        while ((({ done, value } = await reader.read()), !done)) {
-          chunks.push(value);
-        }
-        return new Uint8Array(
-          chunks.reduce((acc, chunk) => acc.concat(Array.from(chunk)), [])
-        );
-      }
-
-      async function decodeJzb(jzbString) {
-        const decoded = decodeBase64Url(jzbString);
-        const compressedData = new Uint8Array(
-          [...decoded].map((c) => c.charCodeAt(0))
-        );
-        const decompressedData = await decompress(compressedData);
-        const jsonString = new TextDecoder().decode(decompressedData);
-        return JSON.parse(jsonString);
-      }
-
-      async function decodeJzbString() {
-        const jzbInput = document.getElementById("jzbInput").value;
-        const outputDiv = document.getElementById("output");
-        try {
-          const decodedJson = await decodeJzb(jzbInput);
-          outputDiv.textContent = JSON.stringify(decodedJson, null, 2);
-        } catch (err) {
-          outputDiv.textContent = `Error: ${err.message}`;
-        }
-      }
-    </script>
+    <script type="module" src="index.js"></script>
   </body>
 </html>
