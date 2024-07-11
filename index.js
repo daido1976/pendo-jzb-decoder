@@ -1,9 +1,16 @@
-export function decodeBase64Url(input) {
+// @ts-check
+/**
+ * @param {string} input
+ */
+function decodeBase64Url(input) {
   input = input.replace(/-/g, "+").replace(/_/g, "/");
   return atob(input);
 }
 
-export async function decompress(data) {
+/**
+ * @param {Uint8Array} data
+ */
+async function decompress(data) {
   const cs = new DecompressionStream("deflate");
   const writer = cs.writable.getWriter();
   writer.write(data);
@@ -20,8 +27,11 @@ export async function decompress(data) {
   );
 }
 
-export async function decodeJzb(jzbString) {
-  const decoded = decodeBase64Url(jzbString);
+/**
+ * @param {string} str
+ */
+async function decodeJzb(str) {
+  const decoded = decodeBase64Url(str);
   const compressedData = new Uint8Array(
     [...decoded].map((c) => c.charCodeAt(0))
   );
@@ -30,16 +40,20 @@ export async function decodeJzb(jzbString) {
   return JSON.parse(jsonString);
 }
 
-async function handleInput() {
-  const jzbInput = document.getElementById("jzbInput").value;
-  const outputDiv = document.getElementById("output");
+const jzbInput = /** @type {HTMLTextAreaElement} */ (
+  document.getElementById("jzbInput")
+);
+
+const outputDiv = /** @type {HTMLDivElement} */ (
+  document.getElementById("output")
+);
+
+jzbInput.addEventListener("input", async () => {
   try {
-    const decodedJson = await decodeJzb(jzbInput);
+    const decodedJson = await decodeJzb(jzbInput.value);
     outputDiv.textContent = JSON.stringify(decodedJson, null, 2);
   } catch (err) {
     console.debug(`Error: ${err.message}`);
     outputDiv.textContent = "Please enter a valid JZB string.";
   }
-}
-
-document.getElementById("jzbInput").addEventListener("input", handleInput);
+});
