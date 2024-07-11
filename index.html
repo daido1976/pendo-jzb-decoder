@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JZB Decoder</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      label,
+      textarea,
+      button {
+        display: block;
+        margin: 10px 0;
+      }
+      textarea {
+        width: 100%;
+        height: 100px;
+      }
+      #output {
+        margin-top: 20px;
+        white-space: pre-wrap;
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JZB Decoder</h1>
+    <label for="jzbInput">Enter JZB String:</label>
+    <textarea id="jzbInput"></textarea>
+    <button onclick="decodeJzbString()">Decode</button>
+    <div id="output"></div>
+    <script>
+      function decodeBase64Url(input) {
+        input = input.replace(/-/g, "+").replace(/_/g, "/");
+        return atob(input);
+      }
+
+      async function decompress(data) {
+        const cs = new DecompressionStream("deflate");
+        const writer = cs.writable.getWriter();
+        writer.write(data);
+        writer.close();
+
+        const reader = cs.readable.getReader();
+        const chunks = [];
+        let done, value;
+        while ((({ done, value } = await reader.read()), !done)) {
+          chunks.push(value);
+        }
+        return new Uint8Array(
+          chunks.reduce((acc, chunk) => acc.concat(Array.from(chunk)), [])
+        );
+      }
+
+      async function decodeJzb(jzbString) {
+        const decoded = decodeBase64Url(jzbString);
+        const compressedData = new Uint8Array(
+          [...decoded].map((c) => c.charCodeAt(0))
+        );
+        const decompressedData = await decompress(compressedData);
+        const jsonString = new TextDecoder().decode(decompressedData);
+        return JSON.parse(jsonString);
+      }
+
+      async function decodeJzbString() {
+        const jzbInput = document.getElementById("jzbInput").value;
+        const outputDiv = document.getElementById("output");
+        try {
+          const decodedJson = await decodeJzb(jzbInput);
+          outputDiv.textContent = JSON.stringify(decodedJson, null, 2);
+        } catch (err) {
+          outputDiv.textContent = `Error: ${err.message}`;
+        }
+      }
+    </script>
+  </body>
+</html>
